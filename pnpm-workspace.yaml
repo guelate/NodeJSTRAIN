@@ -1,0 +1,6 @@
+packages:
+  # all packages in direct subdirs of packages/
+  # - apps (C'est ici que va être créer tes projets) Ex: projet client ou server
+  # - packages (généralement les prjets communs, exemple les configurations qui vont être utiliser dans le client et le server )
+
+  - 'packages/*'

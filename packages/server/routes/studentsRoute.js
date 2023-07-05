@@ -8,6 +8,7 @@ let studentSchema = require("../models/student");
 router.post("/create-student", async (req, res, next) => {
   try {
     const student = await studentSchema.create(req.body);
+    console.log("ajout",student)
     res.json(student);
   } catch (error) {
     return next(error);
@@ -30,6 +31,7 @@ router.get("/", async (req, res, next) => {
 router.delete('/:deletedValue', async(req,res,next) => {
   try {
     const data = await studentSchema.deleteOne(req.params.name);
+    console.log("supprime",data)
     res.json(data)
   } catch (error){
     return next(error)

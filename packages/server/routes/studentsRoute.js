@@ -1,22 +1,35 @@
 const express = require("express");
+const jwt = require("jsonwebtoken");
+const fs = require("fs");
+
 const router = express.Router();
 
-// Student Model
 let studentSchema = require("../models/student");
 
-// CREATE Student
+// Créer un vrai systeme d'authentification en utilisant le fichier authRoutes
+
 router.post("/create-student", async (req, res, next) => {
   try {
     const student = await studentSchema.create(req.body);
-    console.log("ajout",student)
-    res.json(student);
+    console.log("ajout", student);
+    // res.json(student);
+
+    const privateKey = fs.readFileSync("jwtRS256.key");
+    jwt.sign(
+      { name: student.name, email: student.email, role: "admin" }, // Payload --> base de donnée
+      privateKey, // Mot secretadmin
+      { algorithm: "RS256" }, // Header
+      function (err, token) {
+        return res.json({
+          token,
+        });
+      }
+    );
   } catch (error) {
     return next(error);
   }
-
 });
 
-// READ Students [step:2]
 router.get("/", async (req, res, next) => {
   try {
     const students = await studentSchema.find();
@@ -25,83 +38,57 @@ router.get("/", async (req, res, next) => {
   } catch (error) {
     return next(error);
   }
-
 });
 
-router.delete('/:deletedValue', async(req,res,next) => {
-  
+router.delete("/:deletedValue", async (req, res, next) => {
   try {
-    const data = await studentSchema.deleteOne({name:req.params.deletedValue});
-    console.log("supprime",data)
-    res.json(data)
-  } catch (error){
-    return next(error)
-  }
-})
+    const getHeaders = req.get("Authorization");
+    const tokens = getHeaders.split(" ");
+    const bearerToken = tokens[1];
+    console.log("Authorization", bearerToken);
 
+    //quand on creer un token: clé privée / quand on veux verifier un token: clée public
+    // 1 - verify le token envoyé
+    var cert = fs.readFileSync("jwtRS256.key.pub"); // get public key
+    jwt.verify(bearerToken, cert, function (err, decoded) {
+      console.log(decoded, err); // bar
+    }); 
 
-router.put('/:putedValue', async(req,res,next) => {
+    // 2 - verifier le role qui se trouve danparamss le token (si l'utilisateur est admin alors delete ok)
 
-  // console.log("current data",JSON.stringify(req.params,null, 2))
-  
-  // console.log("new data",req.body)
-  
-  const {putedValue} = req.params; // recupere moi putedValue(=value.name) qui est dans req.params envoyé depuis le front
-  // console.log("value",JSON.stringify(putedValue, null, 2))
-
-  try {
-    const data = await studentSchema.findOneAndUpdate({name:putedValue}, { 
-      name: req.body.name,
-      email: req.body.email
-    }, {
-      new: true
+    const data = await studentSchema.deleteOne({
+      name: req.params.deletedValue,
     });
-    console.log("update....")
-    res.json(data)
-  }catch(error){
-    return next(error)
+    console.log("supprime", data);
+    res.json(data);
+  } catch (error) {
+    return next(error);
   }
-})
+});
 
+router.put("/:putedValue", async (req, res, next) => {
+  const { putedValue } = req.params; // recupere moi la valeur segmenté envoyé depuis le front
+  console.log(putedValue);
+
+  try {
+    const data = await studentSchema.findOneAndUpdate(
+      { name: putedValue },
+      {
+        name: req.body.name,
+        email: req.body.email,
+      },
+      {
+        new: true,
+      }
+    );
+    console.log("update....", data);
+    res.json(data);
+  } catch (error) {
+    return next(error);
+  }
+});
 
 module.exports = router;
-
-
-// router.put('/:putedValue', async(req,res,next) => {
-
-//   try {
-//     const data = await studentSchema.findOneAndUpdate(req.params.name, { 
-//       name: req.body.name,
-//       email: req.body.email
-//     }, {
-//       new: true
-//     });
-//     console.log("update....")
-//     res.json(data)
-//   }catch(error){
-//     return next(error)
-//   }
-// })
-
-
-// router.put('/:putedValue', async(req,res,next) => {
-
-//   try {
-//     const data = await studentSchema.findOneAndUpdate(req.params.email, { 
-//       name: req.body.name,
-//       email: req.body.email
-//     }, {
-//       new: true
-//     });
-//     console.log("update....")
-//     res.json(data)
-//   }catch(error){
-//     return next(error)
-//   }
-// })
-
-
-
 
 /*
   METHOD HTTP: POST, GET, PUT, DELETE, PATCH...
@@ -134,4 +121,17 @@ module.exports = router;
   PUT https://harvard.com/students/${parametre} -> value.name -> killian 
   (dans express router.put https://harvard.com/students/:identifiant) req.params.identifiant
 
+
+
+explication: methode put / delete
+
+Dans notre exemple, lorsque vous accédez à l'URL /books/123 (cote front), Express associe cette URL à la route '/books/:id' (cote back)
+et extrait la valeur 123 du segment de l'URL correspondant au paramètre id. L'objet req.params ressemblera alors à { id: '123' }.
+Vous pouvez accéder à la valeur du paramètre id en utilisant req.params.id. Par exemple, si vous souhaitez mettre à jour un 
+livre avec l'ID spécifié dans l'URL, vous pouvez utiliser const id = req.params.id; pour stocker cette valeur dans une variable.
+
+avec mes mots:
+segmente moi ce qui est envoyé depuis le front (url segmenté par /:) et passe le variable grâce à req.params (var = req.params)
+
+req.params -> methode pour accéder à la vlr d'un params
 */

@@ -10,6 +10,9 @@ const studentSchema = new Schema( // ou const StudtShema = new mongoose.shema ..
     email: {
       type: String,
     },
+    password: {
+      type: String,
+    }
   },
 
   //collection (partie facultatif ?)

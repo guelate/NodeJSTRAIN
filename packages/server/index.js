@@ -51,5 +51,8 @@ app.use((req, res, next) => {
 app.use(function (err, req, res, next) {
   console.error(err.message);
   if (!err.statusCode) err.statusCode = 500; //erreur de requete innatendu incapable à traiter, souvent lié a un pb de configuration 
-  res.status(err.statusCode).send(err.message);
+  res.status(err.statusCode).send({
+    statusCode: err.statusCode,
+    message: err.message,
+  });
 });

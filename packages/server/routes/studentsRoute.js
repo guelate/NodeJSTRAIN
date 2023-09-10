@@ -11,6 +11,7 @@ let studentSchema = require("../models/student");
 router.post("/create-student", async (req, res, next) => {
   try {
     const student = await studentSchema.create(req.body);
+    
     console.log("ajout", student);
     // res.json(student);
 

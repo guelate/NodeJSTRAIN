@@ -8,6 +8,8 @@ let studentSchema = require("../models/student");
 
 // Créer un vrai systeme d'authentification en utilisant le fichier authRoutes
 
+
+//revoir cette fonction 
 router.post("/create-student", async (req, res, next) => {
   try {
     const student = await studentSchema.create(req.body);
@@ -41,18 +43,20 @@ router.get("/", async (req, res, next) => {
   }
 });
 
+//revoir cette fonction
 router.delete("/:deletedValue", async (req, res, next) => {
   try {
-    const getHeaders = req.get("Authorization");
-    const tokens = getHeaders.split(" ");
-    const bearerToken = tokens[1];
-    console.log("Authorization", bearerToken);
+    // const getHeaders = req.get("Authorization");
+    // const tokens = getHeaders.split(" ");
+    // const bearerToken = tokens[1];
+    // console.log("Authorization", bearerToken);
 
     //quand on creer un token: clé privée / quand on veux verifier un token: clée public
     // 1 - verify le token envoyé
     var cert = fs.readFileSync("jwtRS256.key.pub"); // get public key
     jwt.verify(bearerToken, cert, function (err, decoded) {
       console.log(decoded, err); // bar
+
     }); 
 
     // 2 - verifier le role qui se trouve danparamss le token (si l'utilisateur est admin alors delete ok)
